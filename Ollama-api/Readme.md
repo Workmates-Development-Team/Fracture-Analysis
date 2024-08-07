@@ -23,12 +23,12 @@ python3 -m venv myenv
 
 - Activate the environment
 
-- in windows
+  in windows
 ```bash
 myenv\Scripts\activate
 ```
 
-- in linux
+   in linux
 ```bash
 source myenv/bin/activate
 ```
