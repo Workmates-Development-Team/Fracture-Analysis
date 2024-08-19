@@ -1,0 +1,7 @@
+flask
+flask_cors
+langchain
+langchain_aws
+langchain_community
+boto3
+base64
