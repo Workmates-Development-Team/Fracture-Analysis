@@ -5,6 +5,8 @@ import os
 from PIL import Image
 import pyautogui
 import pygetwindow
+from pymongo import MongoClient
+from datetime import datetime
 
 app = Flask(__name__)
 
@@ -16,11 +18,19 @@ result_folder = os.path.join(project_folder, 'PredictResults/')
 os.makedirs(upload_folder, exist_ok=True)
 os.makedirs(result_folder, exist_ok=True)
 
-@app.route('/upload', methods=['POST'])
-def upload_image():
-    if 'file' not in request.files:
-        return jsonify({'error': 'No file part'}), 400
+# MongoDB configuration
+client = MongoClient('mongodb://localhost:27017/')  # Replace with your MongoDB connection string
+db = client['BoneFractureDB']
+collection = db['predictions']
+
+@app.route('/upload_predict', methods=['POST'])
+def upload_predict_image():
+    if 'file' not in request.files or 'user_id' not in request.form:
+        return jsonify({'error': 'File or User ID missing'}), 400
+    
     file = request.files['file']
+    user_id = request.form['user_id']
+    
     if file.filename == '':
         return jsonify({'error': 'No selected file'}), 400
 
@@ -28,28 +38,20 @@ def upload_image():
     filepath = os.path.join(upload_folder, filename)
     file.save(filepath)
 
-    # Return the uploaded filename for further processing
-    return jsonify({'filename': filename}), 200
-
-@app.route('/predict', methods=['POST'])
-def predict_image():
-    data = request.json
-    filename = data.get('filename')
-    if not filename:
-        return jsonify({'error': 'Filename not provided'}), 400
-    
-    filepath = os.path.join(upload_folder, filename)
-    if not os.path.exists(filepath):
-        return jsonify({'error': 'File does not exist'}), 404
-    
-    # Perform predictions
+    # Perform predictions after the file is saved
     bone_type_result = predict(filepath)
     result = predict(filepath, bone_type_result)
     
     prediction_result = {
+        'user_id': user_id,
+        'filename': filename,
         'result': result,
-        'bone_type': bone_type_result
+        'bone_type': bone_type_result,
+        'timestamp': datetime.utcnow()
     }
+
+    # Save the result to MongoDB
+    collection.insert_one(prediction_result)
     
     return jsonify(prediction_result), 200
 
