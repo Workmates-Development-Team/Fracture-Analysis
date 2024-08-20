@@ -20,8 +20,12 @@ os.makedirs(result_folder, exist_ok=True)
 
 # MongoDB configuration
 client = MongoClient('mongodb://localhost:27017/')  # Replace with your MongoDB connection string
-db = client['BoneFractureDB']
-collection = db['predictions']
+db = client['Fracture-Analysis']
+collection = db['users']
+
+
+
+
 
 @app.route('/upload_predict', methods=['POST'])
 def upload_predict_image():
@@ -50,10 +54,43 @@ def upload_predict_image():
         'timestamp': datetime.utcnow()
     }
 
-    # Save the result to MongoDB
-    collection.insert_one(prediction_result)
+    # Save the result to MongoDB and get the inserted ID
+    insert_result = collection.update_one(prediction_result)
+    prediction_result['_id'] = str(insert_result.inserted_id)  # Convert ObjectId to string
     
     return jsonify(prediction_result), 200
+
+# @app.route('/upload_predict', methods=['POST'])
+# def upload_predict_image():
+#     if 'file' not in request.files or 'user_id' not in request.form:
+#         return jsonify({'error': 'File or User ID missing'}), 400
+    
+#     file = request.files['file']
+#     user_id = request.form['user_id']
+    
+#     if file.filename == '':
+#         return jsonify({'error': 'No selected file'}), 400
+
+#     filename = secure_filename(file.filename)
+#     filepath = os.path.join(upload_folder, filename)
+#     file.save(filepath)
+
+#     # Perform predictions after the file is saved
+#     bone_type_result = predict(filepath)
+#     result = predict(filepath, bone_type_result)
+    
+#     prediction_result = {
+#         'user_id': user_id,
+#         'filename': filename,
+#         'result': result,
+#         'bone_type': bone_type_result,
+#         'timestamp': datetime.utcnow()
+#     }
+
+#     # Save the result to MongoDB
+#     collection.insert_one(prediction_result)
+    
+#     return jsonify(prediction_result), 200
 
 @app.route('/save_result', methods=['POST'])
 def save_result():
