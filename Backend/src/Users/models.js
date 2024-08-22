@@ -14,6 +14,8 @@ const userSchema = new mongoose.Schema({
     state: { type: String, required: true },
     zip: { type: String, required: true }
   },
+
+  details: { type: String},
   isDeleted: { type: Boolean, default: false },
   isActive: { type: Boolean, default: true },
   

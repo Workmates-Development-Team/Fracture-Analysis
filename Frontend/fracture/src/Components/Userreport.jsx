@@ -1,8 +1,10 @@
-import React, { useState, useRef } from 'react';
+
+import React, { useState, useRef, useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import xray from '../assets/shared image.jpeg';
 import { Box, FormControl, FormLabel, Stack, Flex, Heading, Text, Button } from '@chakra-ui/react';
 import ReactToPdf from 'react-to-pdf';
+import { AuthContext } from '../Context/Authcontext';
 
 export default function Userreport() {
   const [uploadedImage, setUploadedImage] = useState(null);
@@ -10,7 +12,14 @@ export default function Userreport() {
   const [imageUploaded, setImageUploaded] = useState(false);
   const [predictionResult, setPredictionResult] = useState(null);
   const navigate = useNavigate();
+  const { user } = useContext(AuthContext);
   const ref = useRef();
+
+  
+
+  //console.log(user.file_data);
+  const base64Image = `data:image/jpeg;base64,${user.file_data}`;
+
 
   return (
     <Stack direction={{ base: 'column', md: 'row' }} height="130vh">
@@ -32,16 +41,17 @@ export default function Userreport() {
               Patient Details:
             </Heading>
             <Text fontSize={{ base: 'md', lg: 'lg' }} color={'gray.500'} mb={1}>
-              <strong>Name:</strong> Ritobrata Sarkar
+              <strong>Name:</strong> {user?.name}
             </Text>
             <Text fontSize={{ base: 'md', lg: 'lg' }} color={'gray.500'} mb={1}>
-              <strong>Age:</strong> 29
+              <strong>Age:</strong> {user?.age}
             </Text>
             <Text fontSize={{ base: 'md', lg: 'lg' }} color={'gray.500'} mb={1}>
-              <strong>Email:</strong> ritobrata03@gmail.com
+              <strong>Email:</strong> {user?.email}
             </Text>
             <Text fontSize={{ base: 'md', lg: 'lg' }} color={'gray.500'} mb={1}>
-              <strong>Address:</strong> Netaji Park, Kolkata, 70000001
+              <strong>Address:</strong>
+              {user?.address?.street}, {user?.address?.city}, {user?.address?.state}, {user?.address?.zip}
             </Text>
           </Stack>
 
@@ -98,7 +108,9 @@ export default function Userreport() {
             <Stack spacing={6} align="center" p={6} bg="blue.900" borderRadius="md" maxW="md" mx="auto" mt={{ base: '-30px', md: '-80px' }}>
               <FormControl>
                 <FormLabel htmlFor="image" display="flex" flexDirection="column" alignItems="center" color="white">
-                  <img src={xray} height={450} width={450} alt="X-ray Image" />
+                  {/* <img src={xray} height={450} width={450} alt="X-ray Image" /> */}
+                  <img src={base64Image} height={450} width={450} alt="X-ray Image" />
+
                 </FormLabel>
               </FormControl>
             </Stack>
