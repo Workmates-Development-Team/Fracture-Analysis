@@ -84,6 +84,8 @@ export default function HeroSection() {
     setToggle(false);
   };
 
+  
+
   return (
     <Stack minH={"100vh"} direction={{ base: "column", md: "row" }}>
       <Flex p={8} flex={1} align={"center"} justify={"center"}>

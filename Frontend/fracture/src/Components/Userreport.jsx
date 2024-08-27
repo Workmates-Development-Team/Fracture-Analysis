@@ -5,20 +5,67 @@ import xray from '../assets/shared image.jpeg';
 import { Box, FormControl, FormLabel, Stack, Flex, Heading, Text, Button } from '@chakra-ui/react';
 import ReactToPdf from 'react-to-pdf';
 import { AuthContext } from '../Context/Authcontext';
+import { axiosInstance } from '../Axioshelper/Axiosinstance';
 
 export default function Userreport() {
   const [uploadedImage, setUploadedImage] = useState(null);
   const [filename, setFilename] = useState('');
   const [imageUploaded, setImageUploaded] = useState(false);
   const [predictionResult, setPredictionResult] = useState(null);
+  const [report, setReport] = useState();
   const navigate = useNavigate();
-  const { user } = useContext(AuthContext);
+  const { user, getProfile } = useContext(AuthContext);
   const ref = useRef();
 
+  useEffect(() => {
+    
+    fetchData();
+    console.log(user);
+  }, []);
   
+  const fetchData = async () => {
+    try {
+      const { data } = await axiosInstance.get("/user/profile");
+      console.log(data?.user);
+      setPredictionResult(data?.user);
+      const result = extractSections(data?.user?.details);
+      console.log(result);
+      setReport(result);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const extractSections = (inputText) => {
+    const sections = {};
+
+    // Regular expressions to match each section
+    const regexPatterns = {
+        anatomyObserved: /Anatomy Observed:\n([\s\S]*?)(?=\n\w+:|\n$)/,
+        findings: /Findings:\n([\s\S]*?)(?=\n\w+:|\n$)/,
+        impression: /Impression:\n([\s\S]*?)(?=\n\w+:|\n$)/,
+        recommendations: /Recommendations:\n([\s\S]*)$/,
+    };
+
+    // Extracting each section
+    for (const [key, regex] of Object.entries(regexPatterns)) {
+        const match = inputText.match(regex);
+        sections[key] = match ? match[1].trim() : null;
+    }
+
+    return sections;
+};
 
   //console.log(user.file_data);
-  const base64Image = `data:image/jpeg;base64,${user.file_data}`;
+  const base64Image = `data:image/jpeg;base64,${predictionResult?.file_data}`;
+
+ 
+  
+
+  const handlePrint = () => {
+   
+  };
+
 
 
   return (
@@ -44,14 +91,14 @@ export default function Userreport() {
               <strong>Name:</strong> {user?.name}
             </Text>
             <Text fontSize={{ base: 'md', lg: 'lg' }} color={'gray.500'} mb={1}>
-              <strong>Age:</strong> {user?.age}
+              <strong>Age:</strong> {predictionResult?.age}
             </Text>
             <Text fontSize={{ base: 'md', lg: 'lg' }} color={'gray.500'} mb={1}>
               <strong>Email:</strong> {user?.email}
             </Text>
             <Text fontSize={{ base: 'md', lg: 'lg' }} color={'gray.500'} mb={1}>
               <strong>Address:</strong>
-              {user?.address?.street}, {user?.address?.city}, {user?.address?.state}, {user?.address?.zip}
+              {predictionResult?.address?.street}, {predictionResult?.address?.city}, {predictionResult?.address?.state}, {predictionResult?.address?.zip}
             </Text>
           </Stack>
 
@@ -63,27 +110,32 @@ export default function Userreport() {
               </Text>
             </Heading>
             <Text fontSize={{ base: 'md', lg: 'lg' }} color={'gray.500'}>
-              The bone type appears to be the hand. The image shows a fracture or break in one of the bones.
+              The bone type appears to be {predictionResult?.bone_type}. The image shows {predictionResult?.result} bone.
             </Text>
             <Text fontSize={{ base: 'md', lg: 'lg' }} color={'gray.500'}>
               <strong>Detailed Radiologist Report:</strong>
             </Text>
             <Text fontSize={{ base: 'md', lg: 'lg' }} color={'gray.500'}>
               <strong>Anatomy Observed:</strong><br />
-              The x-ray image depicts the bones of the hand, including the metacarpals and phalanges. The bones appear well-aligned and demonstrate normal mineralization.
+              {/* The x-ray image depicts the bones of the hand, including the metacarpals and phalanges. The bones appear well-aligned and demonstrate normal mineralization. */}
+              {report?.anatomyObserved}
             </Text>
             <Text fontSize={{ base: 'md', lg: 'lg' }} color={'gray.500'}>
               <strong>Findings:</strong><br />
-              There is a clear fracture line noted in the distal portion of the 5th metacarpal bone, as indicated by the arrow in the image. This represents a fracture of the 5th metacarpal bone. The surrounding soft tissues appear unremarkable, without any evident swelling or displacement of the fracture fragments.
+              {/* There is a clear fracture line noted in the distal portion of the 5th metacarpal bone, as indicated by the arrow in the image. This represents a fracture of the 5th metacarpal bone. The surrounding soft tissues appear unremarkable, without any evident swelling or displacement of the fracture fragments. */}
+              {report?.findings}
             </Text>
             <Text fontSize={{ base: 'md', lg: 'lg' }} color={'gray.500'}>
               <strong>Impression:</strong><br />
-              The imaging findings are consistent with a fracture of the 5th metacarpal bone of the hand.
+              {/* The imaging findings are consistent with a fracture of the 5th metacarpal bone of the hand. */}
+              {report?.impression}
             </Text>
             <Text fontSize={{ base: 'md', lg: 'lg' }} color={'gray.500'}>
               <strong>Recommendations:</strong><br />
-              Further clinical correlation is advised to determine the mechanism of injury and associated symptoms. Appropriate immobilization and follow-up care should be provided to monitor the healing process and ensure proper bone alignment.
-            </Text>
+              {/* Further clinical correlation is advised to determine the mechanism of injury and associated symptoms. Appropriate immobilization and follow-up care should be provided to monitor the healing process and ensure proper bone alignment. */}
+          
+              {report?.recommendations} 
+              </Text>
            
             
           </Stack>
@@ -95,6 +147,7 @@ export default function Userreport() {
           top={4}
           right={4}
           size="sm"
+          onClick={handlePrint}
         >
           Download as PDF
         </Button>
