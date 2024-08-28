@@ -1,22 +1,19 @@
 import React, { useState, useContext, useEffect } from "react";
-import { AuthContext, useAuth } from "../context/AuthContext";
+import { AuthContext } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
-export const AuthGuard = ({ children }) => {
+export const GuestGuard = ({ children }) => {
   const navigate = useNavigate();
   const { user, loading } = useContext(AuthContext);
   useEffect(() => {
-    if (!loading){
-     if( !user) {
-        navigate("/login");
-      }
-    } 
-  }, [user,loading]);
+    if (!loading && user) {
+      navigate("/");
+    }
+  }, [user, loading]);
 
   if (loading) {
-    return <div>Loading...</div>;
-    
+    <div>Loading...</div>;
+   
   }
-
   return <div>{children}</div>;
 };

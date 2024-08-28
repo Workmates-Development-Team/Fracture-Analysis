@@ -24,19 +24,18 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const { setUser } = useContext(AuthContext);
+  const { getProfile } = useContext(AuthContext);
 
   const handleLogin = async () => {
     try {
-      const response = await axiosInstance.post("/user/login", { email, password });
+      const response = await axiosInstance.post("/admin/login", { email, password });
       console.log(response.data);
 
       if (response.status === 200) {
         console.log(response.data.token);
 
         window.localStorage.setItem("token", response.data.token);
-        setUser(response.data?.User);
-
+        getProfile()
         toast.success("Login successful! Redirecting...", {
           position: "top-right",
           autoClose: 3000,

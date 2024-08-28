@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken';
 // Generate JWT Token
 const generateToken = (id, role) => {
     return jwt.sign({ id, role }, process.env.JWT_SECRET, {
-        expiresIn: '1h',
+        expiresIn: '12h',
     });
 };
 
@@ -72,6 +72,53 @@ export const deleteAdmin = async (req, res) => {
             return res.status(404).json({ success: false, message: 'Admin not found' });
         }
         res.status(200).json({ success: true, data: {} });
+    } catch (error) {
+        res.status(400).json({ success: false, error: error.message });
+    }
+};
+
+export const getUsersByRole = async (req, res) => {
+    try {
+        // Query to find admins with role 'radiologist' or 'doctor'
+        const users = await Admin.find({
+            role: { $in: ['radiologist', 'doctor'] }
+        });
+
+        // Check if users are found
+        if (!users.length) {
+            return res.status(404).json({ success: false, message: 'No users found' });
+        }
+
+        // Return the found users
+        res.status(200).json({ success: true, data: users });
+    } catch (error) {
+        res.status(400).json({ success: false, error: error.message });
+    }
+};
+
+export const changePassword = async (req, res) => {
+    const { currentPassword, newPassword } = req.body;
+
+    try {
+        // Find the admin by ID (assuming req.user.id is set by the authenticateToken middleware)
+        const admin = await Admin.findById(req.user.id);
+        
+        // Check if the admin exists
+        if (!admin) {
+            return res.status(404).json({ success: false, message: 'Admin not found' });
+        }
+
+        // Check if the current password is correct
+        const isMatch = await admin.comparePassword(currentPassword);
+        if (!isMatch) {
+            return res.status(401).json({ success: false, message: 'Current password is incorrect' });
+        }
+
+        // Update the password
+        admin.password = newPassword;
+        await admin.save();
+
+        res.status(200).json({ success: true, message: 'Password updated successfully' });
     } catch (error) {
         res.status(400).json({ success: false, error: error.message });
     }

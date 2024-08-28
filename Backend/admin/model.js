@@ -6,6 +6,7 @@ const adminSchema = new mongoose.Schema({
     name: { type: String, required: true },
     regId: { type: String, required: true, unique: true },
     email: { type: String, required: true, unique: true },
+    degree: { type: String },
     password: { type: String, required: true },
     role: { type: String, enum: ['radiologist', 'admin', 'doctor'], required: true }
 });

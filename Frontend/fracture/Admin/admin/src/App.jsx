@@ -2,7 +2,10 @@ import { Button } from "./Components/ui/button"
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Login from "./Pages/Signup/Login";
 import { AuthGuard } from "./Guards/Authguard";
-import Home from "./Pages/Dashboard/Home";
+
+import { GuestGuard } from "./Guards/Guestguard";
+import Dashboard from "./Pages/Dashboard";
+
 
 
 function App() {
@@ -13,8 +16,10 @@ function App() {
      <Router>
       <Routes>
         <Route path="/" element={
+          
           <AuthGuard>
-            <Home/>
+            
+            <Dashboard/>
           </AuthGuard>
         }
         >

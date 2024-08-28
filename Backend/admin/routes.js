@@ -1,5 +1,5 @@
 import express from 'express';
-import { registerAdmin, loginAdmin, updateAdmin, deleteAdmin, getProfile } from './controller.js';
+import { registerAdmin, loginAdmin, updateAdmin, deleteAdmin, getProfile, getUsersByRole, changePassword } from './controller.js';
 import { validateAdmin, validateLogin } from '../src/Middlewares/adminValidator.js';
 import { authenticateToken } from '../src/Middlewares/authMiddleware.js';
 
@@ -13,5 +13,9 @@ router.get('/profile', authenticateToken, getProfile);
 // Protected Routes
 router.put('/:id', authenticateToken, validateAdmin, updateAdmin);
 router.delete('/:id', authenticateToken, deleteAdmin);
+router.get('/users', authenticateToken, getUsersByRole);
+router.post('/change-password', authenticateToken, changePassword);
+
+
 
 export default router;
