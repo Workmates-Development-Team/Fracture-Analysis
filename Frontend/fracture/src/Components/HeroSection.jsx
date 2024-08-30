@@ -8,6 +8,7 @@ import { Box, FormControl, FormLabel, Input, Progress } from "@chakra-ui/react";
 import { Button, Flex, Heading, Image, Stack, Text } from "@chakra-ui/react";
 import { AuthContext } from "../Context/Authcontext";
 import { axiosInstance } from "../Axioshelper/Axiosinstance";
+import { NODEAPI, PYTHON_BEDROCK, PYTHON_CNN } from "../Constant/path";
 
 export default function HeroSection() {
   const [uploadedImage, setUploadedImage] = useState(null);
@@ -33,7 +34,7 @@ export default function HeroSection() {
         throw new Error('No token found');
       }
   
-      const { data } = await axios.get("http://localhost:3000/api/v1/user/profile", {
+      const { data } = await axios.get(NODEAPI+"/user/profile", {
         headers: {
           Authorization: `Bearer ${token}`, // Include the token in the Authorization header
         },
@@ -89,7 +90,7 @@ export default function HeroSection() {
 
     try {
       const response = await axios.post(
-        "http://127.0.0.1:5000/upload_predict",
+        PYTHON_CNN+"/upload_predict",
         formData,
         {
           headers: {
@@ -111,7 +112,7 @@ export default function HeroSection() {
 
     try {
       const response2 = await axios.post(
-        "http://127.0.0.1:5001/img",
+        PYTHON_BEDROCK+"/img",
         formData2,
         {
           headers: {
