@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import axios from "axios";
 ("use client");
 import "./HeroSection.css";
@@ -7,16 +7,51 @@ import { useNavigate } from "react-router-dom";
 import { Box, FormControl, FormLabel, Input, Progress } from "@chakra-ui/react";
 import { Button, Flex, Heading, Image, Stack, Text } from "@chakra-ui/react";
 import { AuthContext } from "../Context/Authcontext";
+import { axiosInstance } from "../Axioshelper/Axiosinstance";
 
 export default function HeroSection() {
   const [uploadedImage, setUploadedImage] = useState(null);
   const [filename, setFilename] = useState("");
   const [imageUploaded, setImageUploaded] = useState(false);
   const [predictionResult, setPredictionResult] = useState(null);
-  const { user } = useContext(AuthContext);
+  const { user, getProfile } = useContext(AuthContext);
   const [toggle, setToggle] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [patientData, setPatientData] = useState();
   const navigate = useNavigate();
+ useEffect(() => {
+  fetchUserProfile();
+  
+    
+  },[]);
+
+  async function fetchUserProfile() {
+    try {
+      const token = localStorage.getItem('token'); // Retrieve the token from localStorage or wherever it's stored
+  
+      if (!token) {
+        throw new Error('No token found');
+      }
+  
+      const { data } = await axios.get("http://localhost:3000/api/v1/user/profile", {
+        headers: {
+          Authorization: `Bearer ${token}`, // Include the token in the Authorization header
+        },
+      });
+      
+      console.log(data?.user);
+      if( data?.user?.details)
+        {
+          setToggle(false);
+        }
+      setPatientData(data?.user);
+      
+  
+    } catch (error) {
+      console.error('Error fetching user profile:', error.message);
+      // Handle the error, e.g., by showing a notification to the user
+    }
+  }
 
   const handleImageUpload = (e) => {
     setToggle(true);
@@ -34,6 +69,14 @@ export default function HeroSection() {
   };
 
   const handleCheck = async () => {
+    
+   if( predictionResult?.details)
+  {
+    setToggle(false);
+  }else{
+
+
+
     setLoading(true);
     if (!uploadedImage) {
       console.error("No image uploaded");
@@ -42,7 +85,7 @@ export default function HeroSection() {
     var prompt = "";
     const formData = new FormData();
     formData.append("file", imageUploaded);
-    formData.append("user_id", user?._id);
+    formData.append("user_id", user._id);
 
     try {
       const response = await axios.post(
@@ -82,6 +125,7 @@ export default function HeroSection() {
     }
     setLoading(false);
     setToggle(false);
+  }
   };
 
   

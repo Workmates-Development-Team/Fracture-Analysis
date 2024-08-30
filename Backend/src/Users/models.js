@@ -17,7 +17,12 @@ const userSchema = new mongoose.Schema({
 
   details: { type: String},
   isDeleted: { type: Boolean, default: false },
+  isRadio: { type: Boolean, default: false },
+  isDoctor: { type: Boolean, default: false },
   isActive: { type: Boolean, default: true },
+  radioName:{type: String},
+  doctorName:{type: String},
+  doctorRemarks:{type: String}
   
  
 }, {

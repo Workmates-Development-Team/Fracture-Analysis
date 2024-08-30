@@ -3,6 +3,7 @@ import { registerAdmin, loginAdmin, updateAdmin, deleteAdmin, getProfile, getUse
 import { validateAdmin, validateLogin } from '../src/Middlewares/adminValidator.js';
 import { authenticateToken } from '../src/Middlewares/authMiddleware.js';
 
+
 const router = express.Router();
 
 // Public Routes
@@ -15,6 +16,7 @@ router.put('/:id', authenticateToken, validateAdmin, updateAdmin);
 router.delete('/:id', authenticateToken, deleteAdmin);
 router.get('/users', authenticateToken, getUsersByRole);
 router.post('/change-password', authenticateToken, changePassword);
+
 
 
 

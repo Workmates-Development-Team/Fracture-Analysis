@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useState } from "react";
 import {
   IconButton,
   Box,
@@ -10,49 +10,48 @@ import {
   Drawer,
   DrawerContent,
   useDisclosure,
-} from '@chakra-ui/react';
+  Badge,
+} from "@chakra-ui/react";
 import {
   FiHome,
   FiTrendingUp,
-  FiCompass,
-  FiStar,
   FiSettings,
   FiMenu,
   FiLogOut,
-} from 'react-icons/fi';
+  FiBell, // Import the notification icon
+} from "react-icons/fi";
 
-import logo from './workmates_logo.png';
-import { AuthContext } from '../Context/Authcontext';
-import AddDoctor from './AddDoctor';
+import logo from "./workmates_logo.png";
+import { AuthContext } from "../Context/Authcontext";
+import AddDoctor from "./AddDoctor";
+import ChangePassword from "./ChangePassword";
+import ViewCase from "./ViewCase";
 
 const LinkItems = [
-  { name: 'Home', icon: FiHome },
-  { name: 'Add Doctor', icon: FiTrendingUp },
-  { name: 'Add Radiologist', icon: FiCompass },
-  { name: 'View All Staff', icon: FiStar },
-  { name: 'View Active Case', icon: FiSettings },
-  { name: 'Log Out', icon: FiLogOut }, // Log Out item
+  { name: "Home", icon: FiHome },
+  { name: "Staff", icon: FiTrendingUp },
+  { name: "Change Password", icon: FiSettings },
+  { name: "Notification", icon: FiBell }, // New Notification item
+  { name: "Log Out", icon: FiLogOut }, // Log Out item
 ];
 
 export default function Sidebar() {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { user, handleLogout } = useContext(AuthContext);
-  
+
   // State to keep track of the active page
-  const [activePage, setActivePage] = useState('Home');
+  const [activePage, setActivePage] = useState("Home");
 
   const renderContent = () => {
     switch (activePage) {
-      case 'Home':
-        return <Text fontSize="xl">Welcome to the Home Page</Text>;
-      case 'Add Doctor':
-        return <AddDoctor/>;
-      case 'Add Radiologist':
-        return <Text fontSize="xl">Add Radiologist Page Content</Text>;
-      case 'View All Staff':
-        return <Text fontSize="xl">View All Staff</Text>;
-      case 'View Active Case':
-        return <Text fontSize="xl">All patient Page</Text>;
+      case "Home":
+        return <ViewCase />;
+      case "Staff":
+        return <AddDoctor />;
+      case "Change Password":
+        return <ChangePassword />;
+      case "Notification":
+        return <Text fontSize="xl">Notifications Page Content</Text>;
       default:
         return <Text fontSize="xl">Welcome to the Home Page</Text>;
     }
@@ -60,8 +59,14 @@ export default function Sidebar() {
 
   return (
     <>
-      <Box minH="100vh" bg={useColorModeValue('gray.100', 'gray.900')}>
-        <SidebarContent onClose={onClose} handleLogout={handleLogout} setActivePage={setActivePage} display={{ base: 'none', md: 'block' }} />
+      <Box minH="100vh" bg={useColorModeValue("gray.100", "gray.900")}>
+        <SidebarContent
+          onClose={onClose}
+          handleLogout={handleLogout}
+          setActivePage={setActivePage}
+          userRole={user?.role} // Pass the user role as a prop
+          display={{ base: "none", md: "block" }}
+        />
         <Drawer
           isOpen={isOpen}
           placement="left"
@@ -71,13 +76,25 @@ export default function Sidebar() {
           size="full"
         >
           <DrawerContent>
-            <SidebarContent onClose={onClose} handleLogout={handleLogout} setActivePage={setActivePage} />
+            <SidebarContent
+              onClose={onClose}
+              handleLogout={handleLogout}
+              setActivePage={setActivePage}
+              userRole={user?.role} // Pass the user role as a prop
+            />
           </DrawerContent>
         </Drawer>
         {/* Mobile Nav */}
-        <MobileNav display={{ base: 'flex', md: 'none' }} onOpen={onOpen} />
+        <MobileNav display={{ base: "flex", md: "none" }} onOpen={onOpen} />
         <Box ml={{ base: 0, md: 60 }} p="4">
-          Welcome {user?.name}
+          {user?.role === "admin" ? (
+            <Badge colorScheme="green">Hello, {user?.role}</Badge>
+          ) : (
+            <Badge colorScheme="green">
+              Hello, {user?.name} , {user?.role}
+            </Badge>
+          )}
+
           {renderContent()}
         </Box>
       </Box>
@@ -85,30 +102,46 @@ export default function Sidebar() {
   );
 }
 
-function SidebarContent({ onClose, handleLogout, setActivePage, ...rest }) {
+function SidebarContent({
+  onClose,
+  handleLogout,
+  setActivePage,
+  userRole,
+  ...rest
+}) {
   return (
     <Box
-      bg={useColorModeValue('white', 'gray.900')}
+      bg={useColorModeValue("white", "gray.900")}
       borderRight="1px"
-      borderRightColor={useColorModeValue('gray.200', 'gray.700')}
-      w={{ base: 'full', md: 60 }}
+      borderRightColor={useColorModeValue("gray.200", "gray.700")}
+      w={{ base: "full", md: 60 }}
       pos="fixed"
       h="full"
       {...rest}
     >
       <Flex h="20" alignItems="center" mx="8" justifyContent="space-between">
         <img src={logo} alt="logo" />
-        <CloseButton display={{ base: 'flex', md: 'none' }} onClick={onClose} />
+        <CloseButton display={{ base: "flex", md: "none" }} onClick={onClose} />
       </Flex>
-      {LinkItems.map((link) => (
-        <NavItem
-          key={link.name}
-          icon={link.icon}
-          onClick={link.name === 'Log Out' ? handleLogout : () => setActivePage(link.name)}
-        >
-          {link.name}
-        </NavItem>
-      ))}
+      {LinkItems.map((link) => {
+        // Conditionally render "Staff" only if the user role is 'admin'
+        if (link.name === "Staff" && userRole !== "admin") {
+          return null;
+        }
+        return (
+          <NavItem
+            key={link.name}
+            icon={link.icon}
+            onClick={
+              link.name === "Log Out"
+                ? handleLogout
+                : () => setActivePage(link.name)
+            }
+          >
+            {link.name}
+          </NavItem>
+        );
+      })}
     </Box>
   );
 }
@@ -119,8 +152,8 @@ function NavItem({ icon, children, onClick, ...rest }) {
       as="a"
       href="#"
       onClick={onClick}
-      style={{ textDecoration: 'none' }}
-      _focus={{ boxShadow: 'none' }}
+      style={{ textDecoration: "none" }}
+      _focus={{ boxShadow: "none" }}
     >
       <Flex
         align="center"
@@ -130,8 +163,8 @@ function NavItem({ icon, children, onClick, ...rest }) {
         role="group"
         cursor="pointer"
         _hover={{
-          bg: 'cyan.400',
-          color: 'white',
+          bg: "cyan.400",
+          color: "white",
         }}
         {...rest}
       >
@@ -140,7 +173,7 @@ function NavItem({ icon, children, onClick, ...rest }) {
             mr="4"
             fontSize="16"
             _groupHover={{
-              color: 'white',
+              color: "white",
             }}
             as={icon}
           />
@@ -158,9 +191,9 @@ function MobileNav({ onOpen, ...rest }) {
       px={{ base: 4, md: 24 }}
       height="20"
       alignItems="center"
-      bg={useColorModeValue('white', 'gray.900')}
+      bg={useColorModeValue("white", "gray.900")}
       borderBottomWidth="1px"
-      borderBottomColor={useColorModeValue('gray.200', 'gray.700')}
+      borderBottomColor={useColorModeValue("gray.200", "gray.700")}
       justifyContent="flex-start"
       {...rest}
     >

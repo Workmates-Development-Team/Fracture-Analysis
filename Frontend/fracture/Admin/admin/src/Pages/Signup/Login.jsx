@@ -114,9 +114,9 @@ export default function Login() {
                   align={"start"}
                   justify={"space-between"}
                 >
-                  <Link to="/register">
+                  {/* <Link to="/register">
                   <Text color={"blue.400"}>Not a member? Register</Text>
-                  </Link>
+                  </Link> */}
                 </Stack>
                 <Button
                   bg={"green.300"}

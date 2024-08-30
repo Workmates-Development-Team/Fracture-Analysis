@@ -58,6 +58,8 @@ const AddDoctor = () => {
       });
   };
 
+  
+
   const del = async (id) => {
     const token = localStorage.getItem('token');
     try {
@@ -73,6 +75,10 @@ const AddDoctor = () => {
       console.error('Error deleting user:', error.response?.data || error.message);
     }
   };
+
+  
+
+
 
   const saveButton = async () => {
     const data = {

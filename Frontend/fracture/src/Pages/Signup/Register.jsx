@@ -9,6 +9,7 @@ import {
   Button,
   Heading,
   useColorModeValue,
+  Text,
 } from "@chakra-ui/react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -24,6 +25,8 @@ export default function Register() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState(""); // Confirm password state
+  const [passwordError, setPasswordError] = useState(""); // Error message state
   const [age, setAge] = useState("");
   const [address, setAddress] = useState({
     street: "",
@@ -34,7 +37,15 @@ export default function Register() {
   const { setUser } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  const handleNext = () => setStep(step + 1); // Go to next step
+  const handleNext = () => {
+    if (step === 1 && password !== confirmPassword) {
+      setPasswordError("Passwords do not match");
+      return;
+    }
+    setPasswordError(""); // Clear error message
+    setStep(step + 1);
+  };
+
   const handleBack = () => setStep(step - 1); // Go to previous step
 
   const handleRegister = async () => {
@@ -52,10 +63,11 @@ export default function Register() {
           position: "top-right",
           autoClose: 3000,
         });
-        navigate('/login');
+        navigate("/login");
       }
     } catch (error) {
-      const errorMessage = error.response?.data?.message || "An error occurred during registration";
+      const errorMessage =
+        error.response?.data?.message || "An error occurred during registration";
       toast.error(errorMessage, {
         position: "top-right",
         autoClose: 5000,
@@ -106,8 +118,9 @@ export default function Register() {
             boxShadow={"lg"}
             p={8}
             width="full"
-            maxHeight="450px"
-            overflowY="auto"
+            maxHeight="550px"
+            //overflowY="auto"
+            
           >
             <Stack spacing={4} align="center">
               <Heading fontSize={"3xl"} mb={4}>
@@ -140,13 +153,26 @@ export default function Register() {
                       onChange={(e) => setPassword(e.target.value)}
                     />
                   </FormControl>
-
+                  <FormControl id="confirmPassword">
+                    <FormLabel>Confirm Password</FormLabel>
+                    <Input
+                      type="password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                    />
+                    {passwordError && (
+                      <Text color="red.500" fontSize="sm">
+                        {passwordError}
+                      </Text>
+                    )}
+                  </FormControl>
                   <Button
                     bg={"blue.300"}
                     color={"white"}
                     _hover={{ bg: "blue.500" }}
                     onClick={handleNext}
-                  width={100}>
+                    width={100}
+                  >
                     Next
                   </Button>
                 </>
@@ -181,24 +207,24 @@ export default function Register() {
                     />
                   </FormControl>
                   <Flex direction="row" justifyContent="space-between" width="100%">
-                  <Button
-                    bg={"blue.300"}
-                    color={"white"}
-                    _hover={{ bg: "blue.500" }}
-                    onClick={handleBack}
-                    width={100}
-                  >
-                    Back
-                  </Button>
-                  <Button
-                    bg={"blue.300"}
-                    color={"white"}
-                    _hover={{ bg: "blue.500" }}
-                    onClick={handleNext}
-                    width={100}
-                  >
-                    Next
-                  </Button>
+                    <Button
+                      bg={"blue.300"}
+                      color={"white"}
+                      _hover={{ bg: "blue.500" }}
+                      onClick={handleBack}
+                      width={100}
+                    >
+                      Back
+                    </Button>
+                    <Button
+                      bg={"blue.300"}
+                      color={"white"}
+                      _hover={{ bg: "blue.500" }}
+                      onClick={handleNext}
+                      width={100}
+                    >
+                      Next
+                    </Button>
                   </Flex>
                 </>
               )}
@@ -224,24 +250,24 @@ export default function Register() {
                     />
                   </FormControl>
                   <Flex direction="row" justifyContent="space-between" width="100%">
-                  <Button
-                    bg={"blue.300"}
-                    color={"white"}
-                    _hover={{ bg: "blue.500" }}
-                    onClick={handleBack}
-                    width={100}
-                  >
-                    Back
-                  </Button>
-                  <Button
-                    bg={"green.300"}
-                    color={"white"}
-                    _hover={{ bg: "green.500" }}
-                    onClick={handleRegister}
-                    width={100}
-                  >
-                    Register
-                  </Button>
+                    <Button
+                      bg={"blue.300"}
+                      color={"white"}
+                      _hover={{ bg: "blue.500" }}
+                      onClick={handleBack}
+                      width={100}
+                    >
+                      Back
+                    </Button>
+                    <Button
+                      bg={"green.300"}
+                      color={"white"}
+                      _hover={{ bg: "green.500" }}
+                      onClick={handleRegister}
+                      width={100}
+                    >
+                      Register
+                    </Button>
                   </Flex>
                 </>
               )}
