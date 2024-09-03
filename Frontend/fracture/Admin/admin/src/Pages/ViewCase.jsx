@@ -20,7 +20,8 @@ import {
   useDisclosure,
   Textarea,
   Image,
-  Input, // Import Input component from Chakra UI
+  Input,
+  useToast, // Import useToast hook
 } from "@chakra-ui/react";
 import axios from "axios";
 import { NODEAPI } from "../Constant/path";
@@ -33,11 +34,12 @@ function ViewCase() {
   const [selectedUser, setSelectedUser] = useState(null);
   const { user } = useContext(AuthContext);
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const [searchEmail, setSearchEmail] = useState(""); // State for search input
+  const [searchEmail, setSearchEmail] = useState(""); 
+  const toast = useToast(); // Initialize the toast hook
 
   useEffect(() => {
     fetchUsers();
-  }, [searchEmail]); // Refetch users when searchEmail changes
+  }, [searchEmail]); 
 
   const fetchUsers = async () => {
     try {
@@ -51,7 +53,7 @@ function ViewCase() {
       }
       
       const response = await axios.get(apiUrl, {
-        params: { email: searchEmail }, // Pass searchEmail as a query parameter
+        params: { email: searchEmail }, 
       });
       setDetails(response?.data?.users || response?.data);
     } catch (error) {
@@ -64,6 +66,86 @@ function ViewCase() {
     onOpen();
   };
 
+  const createNotification = async (patient) => {
+    
+    console.log(patient);
+    try {
+      const response = await axios.post(
+        NODEAPI + "notification/create-notification",
+        {
+          notification: `The case of : ${patient?.name} with email id : ${patient?.email} is handled by Radiologist : ${user?.email}`,
+        }
+      );
+      console.log("Notification created:", response.data);
+
+      // Show success toast
+      toast({
+        title: "Notification created",
+        description: "The notification has been successfully created.",
+        status: "success",
+        duration: 5000,
+        isClosable: true,
+      });
+
+      // Clear the input field
+    
+    } catch (error) {
+      console.error(
+        "Error creating notification:",
+        error.response?.data || error.message
+      );
+
+      // Show error toast
+      toast({
+        title: "Error creating notification",
+        description: error.response?.data?.message || error.message,
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+    }
+  };
+
+  const createNotificationDoc = async (patient) => {
+    
+    console.log(patient);
+    try {
+      const response = await axios.post(
+        NODEAPI + "notification/create-notification",
+        {
+          notification: `The case of : ${patient?.name} with email id : ${patient?.email} is handled by Doctor : ${user?.email}`,
+        }
+      );
+      console.log("Notification created:", response.data);
+
+      // Show success toast
+      toast({
+        title: "Notification created",
+        description: "The notification has been successfully created.",
+        status: "success",
+        duration: 5000,
+        isClosable: true,
+      });
+
+      // Clear the input field
+    
+    } catch (error) {
+      console.error(
+        "Error creating notification:",
+        error.response?.data || error.message
+      );
+
+      // Show error toast
+      toast({
+        title: "Error creating notification",
+        description: error.response?.data?.message || error.message,
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+    }
+  };
+
   const save = async (userId, details) => {
     try {
       const response = await axios.put(`${NODEAPI}user/update-user-details/${userId}`, {
@@ -72,10 +154,23 @@ function ViewCase() {
       });
       console.log('User details updated successfully:', response.data);
       fetchUsers();
-      alert("User details updated successfully");
+      toast({
+        title: "Success",
+        description: "User details updated successfully.",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
       return response.data;
     } catch (error) {
       console.error('Error updating user details:', error.response?.data || error.message);
+      toast({
+        title: "Error",
+        description: "Failed to update user details.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
       throw error;
     }
   };
@@ -87,11 +182,25 @@ function ViewCase() {
             doctorRemarks: remarks
         });
         console.log('User details updated successfully:', response.data);
+
         fetchUsers();
-        alert("User details updated successfully");
+        toast({
+          title: "Success",
+          description: "Doctor's remarks updated successfully.",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
         return response.data;
       } catch (error) {
         console.error('Error updating user details:', error.response?.data || error.message);
+        toast({
+          title: "Error",
+          description: "Failed to update doctor's remarks.",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
         throw error;
       }
   };
@@ -142,7 +251,7 @@ function ViewCase() {
       <Modal isOpen={isOpen} onClose={onClose} size="4xl">
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>Report</ModalHeader>
+          <ModalHeader>Report</          ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             {selectedUser && (
@@ -238,13 +347,14 @@ function ViewCase() {
                 onClick={async () => {
                   try {
                     await save(selectedUser._id, selectedUser.details);
+                    createNotification(selectedUser);
                     onClose();
                   } catch (error) {
                     console.error("Failed to save details:", error);
                   }
                 }}
               >
-                Save
+                Review and Save
               </Button>
             )}
             {user?.role === "admin" && (
@@ -259,6 +369,7 @@ function ViewCase() {
                 onClick={async () => {
                   try {
                     await saveDoctor(selectedUser._id, remarks);
+                    createNotificationDoc(selectedUser);
                     onClose();
                   } catch (error) {
                     console.error("Failed to save details:", error);

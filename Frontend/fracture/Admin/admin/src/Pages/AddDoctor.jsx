@@ -19,6 +19,7 @@ import {
   Input,
   Select,
   useDisclosure,
+  useToast,
 } from '@chakra-ui/react';
 import axios from 'axios';
 import { AuthContext } from '../Context/Authcontext';
@@ -35,7 +36,10 @@ const AddDoctor = () => {
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('');
   const [users, setUsers] = useState([]);
+  const [deleteUserId, setDeleteUserId] = useState(null); // State to track user to delete
   const { user } = useContext(AuthContext);
+  const deleteModal = useDisclosure();
+  const toast = useToast();
 
   useEffect(() => {
     // Fetch users when the component loads
@@ -58,8 +62,6 @@ const AddDoctor = () => {
       });
   };
 
-  
-
   const del = async (id) => {
     const token = localStorage.getItem('token');
     try {
@@ -71,14 +73,25 @@ const AddDoctor = () => {
       fetchData();
       console.log('User deleted successfully:', response.data);
       
+      toast({
+        title: "User deleted",
+        description: "The user has been successfully deleted.",
+        status: "success",
+        duration: 5000,
+        isClosable: true,
+      });
     } catch (error) {
       console.error('Error deleting user:', error.response?.data || error.message);
+      toast({
+        title: "Deletion failed",
+        description: error.response?.data?.message || error.message,
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
     }
+    deleteModal.onClose();
   };
-
-  
-
-
 
   const saveButton = async () => {
     const data = {
@@ -97,9 +110,27 @@ const AddDoctor = () => {
       console.log('Registration successful:', response.data);
       fetchData(); // Refresh the users list
       onClose(); // Close the modal
+
+      // Show success toast
+      toast({
+        title: "Registration successful",
+        description: "The new staff member has been added.",
+        status: "success",
+        duration: 5000,
+        isClosable: true,
+      });
     } catch (error) {
       // Handle errors
       console.error('Registration failed:', error.response?.data || error.message);
+
+      // Show error toast
+      toast({
+        title: "Registration failed",
+        description: error.response?.data?.message || error.message,
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
     }
   };
 
@@ -134,15 +165,17 @@ const AddDoctor = () => {
                 <Td>
                   <Button
                     colorScheme='red'
-                    onClick={() => del(user._id)}
-                    
+                    onClick={() => {
+                      setDeleteUserId(user._id);
+                      deleteModal.onOpen();
+                    }}
                   >
                     Delete
                   </Button>
-                  {" | "}
+                  {/* {" | "}
                   <Button colorScheme='green' >
                     Edit
-                  </Button>
+                  </Button> */}
                 </Td>
               </Tr>
             ))}
@@ -204,6 +237,25 @@ const AddDoctor = () => {
               Save
             </Button>
             <Button variant="ghost" onClick={onClose}>Cancel</Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal isOpen={deleteModal.isOpen} onClose={deleteModal.onClose}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Confirm Deletion</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            Are you sure you want to delete this user?
+          </ModalBody>
+
+          <ModalFooter>
+            <Button colorScheme="red" onClick={() => del(deleteUserId)}>
+              OK
+            </Button>
+            <Button variant="ghost" onClick={deleteModal.onClose}>Cancel</Button>
           </ModalFooter>
         </ModalContent>
       </Modal>

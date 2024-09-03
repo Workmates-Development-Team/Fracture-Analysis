@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import {
   IconButton,
   Box,
@@ -26,6 +26,9 @@ import { AuthContext } from "../Context/Authcontext";
 import AddDoctor from "./AddDoctor";
 import ChangePassword from "./ChangePassword";
 import ViewCase from "./ViewCase";
+import Notification from "./Notification";
+import axios from "axios";
+import { NODEAPI } from "../Constant/path";
 
 const LinkItems = [
   { name: "Home", icon: FiHome },
@@ -38,9 +41,35 @@ const LinkItems = [
 export default function Sidebar() {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { user, handleLogout } = useContext(AuthContext);
+  const [notifications, setNotifications] = useState([]);
 
   // State to keep track of the active page
   const [activePage, setActivePage] = useState("Home");
+
+  useEffect(() => {
+    // Fetch notifications initially
+    fetchNotifications();
+
+    // Set an interval to fetch notifications every 5 seconds
+    const intervalId = setInterval(fetchNotifications, 5000);
+
+    // Clean up the interval on component unmount
+    return () => clearInterval(intervalId);
+  }, []);
+
+  const fetchNotifications = async () => {
+    try {
+      const response = await axios.get(
+        `${NODEAPI}notification/notifications-all/${user._id}`
+      );
+      setNotifications(response.data);
+    } catch (error) {
+      console.error(
+        "Error fetching notifications:",
+        error.response ? error.response.data : error.message
+      );
+    }
+  };
 
   const renderContent = () => {
     switch (activePage) {
@@ -51,7 +80,7 @@ export default function Sidebar() {
       case "Change Password":
         return <ChangePassword />;
       case "Notification":
-        return <Text fontSize="xl">Notifications Page Content</Text>;
+        return <Notification />;
       default:
         return <Text fontSize="xl">Welcome to the Home Page</Text>;
     }
@@ -65,6 +94,7 @@ export default function Sidebar() {
           handleLogout={handleLogout}
           setActivePage={setActivePage}
           userRole={user?.role} // Pass the user role as a prop
+          notifications={notifications} // Pass notifications as a prop
           display={{ base: "none", md: "block" }}
         />
         <Drawer
@@ -81,6 +111,7 @@ export default function Sidebar() {
               handleLogout={handleLogout}
               setActivePage={setActivePage}
               userRole={user?.role} // Pass the user role as a prop
+              notifications={notifications} // Pass notifications as a prop
             />
           </DrawerContent>
         </Drawer>
@@ -107,6 +138,7 @@ function SidebarContent({
   handleLogout,
   setActivePage,
   userRole,
+  notifications, // Receive the notifications as a prop
   ...rest
 }) {
   return (
@@ -128,6 +160,7 @@ function SidebarContent({
         if (link.name === "Staff" && userRole !== "admin") {
           return null;
         }
+
         return (
           <NavItem
             key={link.name}
@@ -139,6 +172,18 @@ function SidebarContent({
             }
           >
             {link.name}
+
+            {/* If the link is Notification and there are unread notifications, show a red dot */}
+            {link.name === "Notification" && notifications.length > 0 && (
+              <Box
+                as="span"
+                ml="2"
+                bg="red.500"
+                borderRadius="full"
+                boxSize="8px"
+                display="inline-block"
+              />
+            )}
           </NavItem>
         );
       })}
@@ -146,41 +191,33 @@ function SidebarContent({
   );
 }
 
-function NavItem({ icon, children, onClick, ...rest }) {
+function NavItem({ icon, children, ...rest }) {
   return (
-    <Box
-      as="a"
-      href="#"
-      onClick={onClick}
-      style={{ textDecoration: "none" }}
-      _focus={{ boxShadow: "none" }}
+    <Flex
+      align="center"
+      p="4"
+      mx="4"
+      borderRadius="lg"
+      role="group"
+      cursor="pointer"
+      _hover={{
+        bg: "cyan.400",
+        color: "white",
+      }}
+      {...rest}
     >
-      <Flex
-        align="center"
-        p="4"
-        mx="4"
-        borderRadius="lg"
-        role="group"
-        cursor="pointer"
-        _hover={{
-          bg: "cyan.400",
-          color: "white",
-        }}
-        {...rest}
-      >
-        {icon && (
-          <Icon
-            mr="4"
-            fontSize="16"
-            _groupHover={{
-              color: "white",
-            }}
-            as={icon}
-          />
-        )}
-        {children}
-      </Flex>
-    </Box>
+      {icon && (
+        <Icon
+          mr="4"
+          fontSize="16"
+          _groupHover={{
+            color: "white",
+          }}
+          as={icon}
+        />
+      )}
+      {children}
+    </Flex>
   );
 }
 
@@ -203,8 +240,9 @@ function MobileNav({ onOpen, ...rest }) {
         aria-label="open menu"
         icon={<FiMenu />}
       />
+
       <Text fontSize="2xl" ml="8" fontFamily="monospace" fontWeight="bold">
-        Logo
+        Dashboard
       </Text>
     </Flex>
   );

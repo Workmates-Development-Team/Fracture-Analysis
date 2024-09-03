@@ -51,13 +51,31 @@ export const loginAdmin = async (req, res) => {
 // Update
 export const updateAdmin = async (req, res) => {
     try {
-        const updatedAdmin = await Admin.findByIdAndUpdate(req.params.id, req.body, {
-            new: true,
-            runValidators: true,
-        });
+        // Extract only the allowed fields from the request body
+        const { name, degree, regId, email } = req.body;
+
+        // Construct the update object with the allowed fields
+        const updateFields = {
+            ...(name && { name }),
+            ...(degree && { degree }),
+            ...(regId && { regId }),
+            ...(email && { email }),
+        };
+
+        // Perform the update operation
+        const updatedAdmin = await Admin.findByIdAndUpdate(
+            req.params.id,
+            updateFields,
+            {
+                new: true, // Return the updated document
+                runValidators: true, // Run validators on the update
+            }
+        );
+
         if (!updatedAdmin) {
             return res.status(404).json({ success: false, message: 'Admin not found' });
         }
+
         res.status(200).json({ success: true, data: updatedAdmin });
     } catch (error) {
         res.status(400).json({ success: false, error: error.message });

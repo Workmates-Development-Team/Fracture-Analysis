@@ -19,37 +19,33 @@ export default function HeroSection() {
   const [toggle, setToggle] = useState(true);
   const [loading, setLoading] = useState(false);
   const [patientData, setPatientData] = useState();
+  const [notification, setNotification] = useState("");
   const navigate = useNavigate();
- useEffect(() => {
-  fetchUserProfile();
-  
-    
-  },[]);
+  useEffect(() => {
+    fetchUserProfile();
+  }, []);
 
   async function fetchUserProfile() {
     try {
-      const token = localStorage.getItem('token'); // Retrieve the token from localStorage or wherever it's stored
-  
+      const token = localStorage.getItem("token"); // Retrieve the token from localStorage or wherever it's stored
+
       if (!token) {
-        throw new Error('No token found');
+        throw new Error("No token found");
       }
-  
-      const { data } = await axios.get(NODEAPI+"/user/profile", {
+
+      const { data } = await axios.get(NODEAPI + "/user/profile", {
         headers: {
           Authorization: `Bearer ${token}`, // Include the token in the Authorization header
         },
       });
-      
+
       console.log(data?.user);
-      if( data?.user?.details)
-        {
-          setToggle(false);
-        }
+      if (data?.user?.details) {
+        setToggle(false);
+      }
       setPatientData(data?.user);
-      
-  
     } catch (error) {
-      console.error('Error fetching user profile:', error.message);
+      console.error("Error fetching user profile:", error.message);
       // Handle the error, e.g., by showing a notification to the user
     }
   }
@@ -70,66 +66,96 @@ export default function HeroSection() {
   };
 
   const handleCheck = async () => {
-    
-   if( predictionResult?.details)
-  {
-    setToggle(false);
-  }else{
+    if (predictionResult?.details) {
+      setToggle(false);
+    } else {
+      setLoading(true);
+      if (!uploadedImage) {
+        console.error("No image uploaded");
+        return;
+      }
+      var prompt = "";
+      const formData = new FormData();
+      formData.append("file", imageUploaded);
+      formData.append("user_id", user._id);
 
+      try {
+        const response = await axios.post(
+          PYTHON_CNN + "/upload_predict",
+          formData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          }
+        );
+        console.log("Prediction Result:", response?.data);
+        createNotification(response?.data);
+        setPredictionResult(response?.data);
+        prompt = `${response?.data?.bone_type}  ${response?.data?.result}`;
+      } catch (error) {
+        console.error("Error fetching prediction:", error);
+      }
 
+      const formData2 = new FormData();
+      formData2.append("image", imageUploaded);
+      formData2.append("prompt", prompt);
+      formData2.append("_id", user?._id);
 
-    setLoading(true);
-    if (!uploadedImage) {
-      console.error("No image uploaded");
-      return;
-    }
-    var prompt = "";
-    const formData = new FormData();
-    formData.append("file", imageUploaded);
-    formData.append("user_id", user._id);
-
-    try {
-      const response = await axios.post(
-        PYTHON_CNN+"/upload_predict",
-        formData,
-        {
+      try {
+        const response2 = await axios.post(PYTHON_BEDROCK + "/img", formData2, {
           headers: {
             "Content-Type": "multipart/form-data",
           },
-        }
-      );
-      console.log("Prediction Result:", response?.data);
-      setPredictionResult(response?.data);
-      prompt = `${response?.data?.bone_type}  ${response?.data?.result}`;
-    } catch (error) {
-      console.error("Error fetching prediction:", error);
+        });
+        console.log("Details Result:", response2?.data);
+      } catch (error) {
+        console.error("Error fetching prediction:", error);
+      }
+      setLoading(false);
+      setToggle(false);
     }
-
-    const formData2 = new FormData();
-    formData2.append("image", imageUploaded);
-    formData2.append("prompt", prompt);
-    formData2.append("_id", user?._id);
-
-    try {
-      const response2 = await axios.post(
-        PYTHON_BEDROCK+"/img",
-        formData2,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-      console.log("Details Result:", response2?.data);
-    } catch (error) {
-      console.error("Error fetching prediction:", error);
-    }
-    setLoading(false);
-    setToggle(false);
-  }
   };
 
-  
+  const createNotification = async (userData) => {
+    
+    console.log(userData);
+    try {
+      const response = await axios.post(
+        NODEAPI + "/notification/create-notification",
+        {
+          notification: `A case of ${userData?.bone_type} fracture of ${userData?.name} with email id ${userData?.email} is registered`,
+        }
+      );
+      console.log("Notification created:", response.data);
+
+      // Show success toast
+      toast({
+        title: "Notification created",
+        description: "The notification has been successfully created.",
+        status: "success",
+        duration: 5000,
+        isClosable: true,
+      });
+
+      // Clear the input field
+      setNotification("");
+    } catch (error) {
+      console.error(
+        "Error creating notification:",
+        error.response?.data || error.message
+      );
+
+      // Show error toast
+      toast({
+        title: "Error creating notification",
+        description: error.response?.data?.message || error.message,
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+    }
+  };
 
   return (
     <Stack minH={"100vh"} direction={{ base: "column", md: "row" }}>
@@ -151,31 +177,27 @@ export default function HeroSection() {
           </Text>
           <Stack direction={{ base: "column", md: "row" }} spacing={4}>
             {loading ? (
-              <>
-                Analyzing...
-              </>
+              <>Analyzing...</>
             ) : (
               <>
-              {
-                toggle?
-                <Button
-                  rounded={"full"}
-                  bg={"blue.800"}
-                  color={"white"}
-                  _hover={{
-                    bg: "blue.400",
-                  }}
-                  onClick={handleCheck}
-                >
-                  Check
-                </Button> :
-
-                <Button rounded={"full"} onClick={() => navigate("/report")}>
-                  View Report
-                </Button>
-              
-            }
-            </>
+                {toggle ? (
+                  <Button
+                    rounded={"full"}
+                    bg={"blue.800"}
+                    color={"white"}
+                    _hover={{
+                      bg: "blue.400",
+                    }}
+                    onClick={handleCheck}
+                  >
+                    Check
+                  </Button>
+                ) : (
+                  <Button rounded={"full"} onClick={() => navigate("/report")}>
+                    View Report
+                  </Button>
+                )}
+              </>
             )}
           </Stack>
         </Stack>
