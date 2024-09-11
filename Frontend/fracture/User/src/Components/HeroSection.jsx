@@ -100,6 +100,7 @@ export default function HeroSection() {
       const formData2 = new FormData();
       formData2.append("image", imageUploaded);
       formData2.append("prompt", prompt);
+      console.log(user?._id);
       formData2.append("_id", user?._id);
 
       try {

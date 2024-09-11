@@ -15,11 +15,15 @@ const app = express();
 
 app.use(cors())
 app.use(express.json()); 
-app.use('/api/v1/user', userRouter);
-app.use('/api/v1/admin', adminRoutes);
-app.use('/api/v1/notification', notificationRoutes);
+app.use('/user', userRouter);
+app.use('/admin', adminRoutes);
+app.use('/notification', notificationRoutes);
+
+app.get('/', (req, res) => {
+  res.send('Working...')
+})
 
 dbConnection();
-app.listen(3000, () => {
-  console.log('Server is running on port 3000');
+app.listen(3400, () => {
+  console.log('Server is running on port 3400');
 });

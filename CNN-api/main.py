@@ -34,6 +34,7 @@ collection = db['users']
  
 @app.route('/upload_predict', methods=['POST'])
 def upload_predict_image():
+    print(request.files['file'])
     if 'file' not in request.files or 'user_id' not in request.form:
         return jsonify({'error': 'File or User ID missing'}), 400
     
@@ -87,6 +88,7 @@ def upload_predict_image():
         # Convert ObjectId to string for JSON serialization
         updated_document['_id'] = str(updated_document['_id'])
     except Exception as e:
+        print(e)
         return jsonify({'error': str(e)}), 500
 
  
@@ -122,7 +124,7 @@ def get_rules_image():
     return send_file(os.path.join(upload_folder, 'rules_temp.jpeg'), mimetype='image/jpeg')
  
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=5000)
+    app.run(debug=True, host="0.0.0.0", port=2002)
  
  
  
