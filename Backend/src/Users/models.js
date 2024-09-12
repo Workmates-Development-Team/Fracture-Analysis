@@ -22,7 +22,9 @@ const userSchema = new mongoose.Schema({
   isActive: { type: Boolean, default: true },
   radioName:{type: String},
   doctorName:{type: String},
-  doctorRemarks:{type: String}
+  doctorRemarks:{type: String},
+  image_data:{type: String},
+  
   
  
 }, {

@@ -41,6 +41,8 @@ export default function Userreport() {
     console.log(user);
   }, []);
 
+  
+
   const fetchData = async () => {
     try {
       const { data } = await axiosInstance.get("/user/profile");

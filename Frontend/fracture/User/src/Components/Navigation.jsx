@@ -1,4 +1,5 @@
 "use client";
+import { useNavigate } from "react-router-dom";
 import logo from "../Images/Main-Logo.png";
 import { Outlet } from "react-router-dom";
 import { React, useContext } from "react";
@@ -29,9 +30,12 @@ import { AuthContext } from "../Context/Authcontext";
 export default function Navigation() {
   const { user, handleLogout } = useContext(AuthContext);
   const { isOpen, onToggle } = useDisclosure();
+  const navigate = useNavigate();
   function handlelogout() {
     handleLogout();
   }
+
+  
   return (
     <Box>
       <Flex
@@ -85,6 +89,22 @@ export default function Navigation() {
           <Text fontSize={"md"} fontWeight={700} alignSelf={"center"}>
             {user?.name || "User"}
           </Text>
+
+          <Button
+            as={Link}
+            display={{ base: "none", md: "inline-flex" }}
+            fontSize={"sm"}
+            fontWeight={800}
+            color={"yellow"}
+            bg={"blue.700"}
+            href={"/all-reposrt"}
+            _hover={{
+              bg: "pink.300",
+            }}
+           
+          >
+            Reports
+          </Button>
           <Button
             as={"a"}
             display={{ base: "none", md: "inline-flex" }}

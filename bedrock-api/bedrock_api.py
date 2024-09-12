@@ -34,7 +34,7 @@ model_claude_opus_30 = "anthropic.claude-3-opus-20240229-v1:0"
 runtime = boto3.client('bedrock-runtime')
 
 # Default system prompt
-sysprompt = "Generate a detailed radiology report based on the provided data and X-ray image as a guide. Your report must include: Anatomy Observed, Findings, Impression, and Recommendations."
+sysprompt = "Generate a detailed radiology report based on the provided data and X-ray image as a guide. Your report must include: Anatomy Observed, Findings, Impression, and Recommendations. if the image is not of an xray then response just 'NO' and don't response a single word apart from it"
 
 # Conversation template
 conversation_template = """You are an AI Radiologist Guide with detailed knowledge in human anatomy and bones.

@@ -6,6 +6,7 @@ import { GuestGuard } from "./Guards/Guestguard";
 import { AuthGuard } from "./Guards/Authguard";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Register from "./Pages/Signup/Register";
+import AllReport from "./Pages/AllReport";
 
 function App() {
   return (
@@ -27,6 +28,7 @@ function App() {
             {/* Nested routes under the Navigation component */}
             <Route index element={<Home />} />
             <Route path="report" element={<Report />} />
+            <Route path="all-reposrt" element={<AllReport />} />
           </Route>
         </Routes>
       </Router>

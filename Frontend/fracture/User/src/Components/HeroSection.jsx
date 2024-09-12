@@ -4,11 +4,19 @@ import axios from "axios";
 import "./HeroSection.css";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import { useNavigate } from "react-router-dom";
-import { Box, FormControl, FormLabel, Input, Progress } from "@chakra-ui/react";
+import {
+  Box,
+  FormControl,
+  FormLabel,
+  Input,
+  Progress,
+  Toast,
+} from "@chakra-ui/react";
 import { Button, Flex, Heading, Image, Stack, Text } from "@chakra-ui/react";
 import { AuthContext } from "../Context/Authcontext";
 import { axiosInstance } from "../Axioshelper/Axiosinstance";
 import { NODEAPI, PYTHON_BEDROCK, PYTHON_CNN } from "../Constant/path";
+import { Save } from "@mui/icons-material";
 
 export default function HeroSection() {
   const [uploadedImage, setUploadedImage] = useState(null);
@@ -20,6 +28,7 @@ export default function HeroSection() {
   const [loading, setLoading] = useState(false);
   const [patientData, setPatientData] = useState();
   const [notification, setNotification] = useState("");
+  const [details, setDetails] = useState("");
   const navigate = useNavigate();
   useEffect(() => {
     fetchUserProfile();
@@ -66,60 +75,87 @@ export default function HeroSection() {
   };
 
   const handleCheck = async () => {
-    if (predictionResult?.details) {
-      setToggle(false);
-    } else {
-      setLoading(true);
-      if (!uploadedImage) {
-        console.error("No image uploaded");
-        return;
-      }
+    setLoading(true);
+
+    if (!uploadedImage) {
+      console.error("No image uploaded");
+      return;
+    }
+
+    try {
       var prompt = "";
       const formData = new FormData();
       formData.append("file", imageUploaded);
       formData.append("user_id", user._id);
-
-      try {
-        const response = await axios.post(
-          PYTHON_CNN + "/upload_predict",
-          formData,
-          {
-            headers: {
-              "Content-Type": "multipart/form-data",
-            },
-          }
-        );
-        console.log("Prediction Result:", response?.data);
-        createNotification(response?.data);
-        setPredictionResult(response?.data);
-        prompt = `${response?.data?.bone_type}  ${response?.data?.result}`;
-      } catch (error) {
-        console.error("Error fetching prediction:", error);
-      }
+      const response = await axios.post(
+        PYTHON_CNN + "/upload_predict",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+      console.log("Prediction Result: ", response?.data);
+      createNotification(response?.data);
+      setPredictionResult(response?.data);
+      prompt = `${response?.data?.bone_type}  ${response?.data?.result}`;
 
       const formData2 = new FormData();
       formData2.append("image", imageUploaded);
       formData2.append("prompt", prompt);
-      console.log(user?._id);
+      // console.log(user?._id);
       formData2.append("_id", user?._id);
 
-      try {
-        const response2 = await axios.post(PYTHON_BEDROCK + "/img", formData2, {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        });
-        console.log("Details Result:", response2?.data);
-      } catch (error) {
-        console.error("Error fetching prediction:", error);
-      }
+      const response2 = await axios.post(PYTHON_BEDROCK + "/img", formData2, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      setDetails(response2?.data);
+      console.log("Details Result: ", response2?.data);
+      console.log(response2?.data?.details);
+      if(!response2?.data?.details.includes("Recommendations"))
+      {
+        setUploadedImage(null); // Clear the uploaded image
+        setImageUploaded(false); // Reset imageUploaded state
+        alert("Not a xray plate, try with a xray plate");
+
+        return
+      }  
+
+    //   const base64Image = response?.data?.image_data;
+    // const base64ImageData = base64Image.split(",")[1]; // Removing the header like "data:image/png;base64,"
+    // const binaryImageData = Buffer.from(base64ImageData, 'base64');
+
+      // saveReports(response?.data, response2?.data);
+
+      console.log(NODEAPI)
+      const response3 = await axios.post(NODEAPI + "/report/create-report", {
+        userid: response?.data?._id,
+        name: response?.data?.name,
+        age: response?.data?.age,
+        address: response?.data?.address,
+        bone_type: response?.data?.bone_type,
+        result: response?.data?.result,
+        details: response2?.data?.details,
+       // image: binaryImageData.toString('base64') 
+      });
+
+      
+      console.log("Report created successfully:", response3?.data);
+
+    } catch (error) {
+      console.log(error);
+    } finally {
       setLoading(false);
       setToggle(false);
     }
   };
 
+
+
   const createNotification = async (userData) => {
-    
     console.log(userData);
     try {
       const response = await axios.post(
@@ -130,15 +166,6 @@ export default function HeroSection() {
       );
       console.log("Notification created:", response.data);
 
-      // Show success toast
-      toast({
-        title: "Notification created",
-        description: "The notification has been successfully created.",
-        status: "success",
-        duration: 5000,
-        isClosable: true,
-      });
-
       // Clear the input field
       setNotification("");
     } catch (error) {
@@ -146,15 +173,6 @@ export default function HeroSection() {
         "Error creating notification:",
         error.response?.data || error.message
       );
-
-      // Show error toast
-      toast({
-        title: "Error creating notification",
-        description: error.response?.data?.message || error.message,
-        status: "error",
-        duration: 5000,
-        isClosable: true,
-      });
     }
   };
 
@@ -181,7 +199,7 @@ export default function HeroSection() {
               <>Analyzing...</>
             ) : (
               <>
-                {toggle ? (
+                
                   <Button
                     rounded={"full"}
                     bg={"blue.800"}
@@ -193,11 +211,11 @@ export default function HeroSection() {
                   >
                     Check
                   </Button>
-                ) : (
+                
                   <Button rounded={"full"} onClick={() => navigate("/report")}>
-                    View Report
+                    View Latest Report
                   </Button>
-                )}
+                
               </>
             )}
           </Stack>
